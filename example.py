@@ -4,7 +4,8 @@ from nlp.evaluation import F1
 from nlp.annotation import fromSGML, extract_contiguous
 from iterextras import partition, iterview
 
-from stringcrf import Instance, StringCRF, build_domain
+#from stringcrf import Instance, StringCRF, build_domain
+from stringcrf2 import Instance, StringCRF, build_domain
 
 
 def main(proportion=None, iterations=20, save='model.pkl~', load=None):
@@ -114,6 +115,7 @@ if __name__ == '__main__':
         from profiling.utils import profile_viz
         profile_viz('main(proportion=[0.1, 0.1], iterations=2, save=False)')
 
-    from automain import automain;
+    from automain import automain
     automain(available=[quicky, run, profile, load, quicky2],
              ultraTB=True)
+    

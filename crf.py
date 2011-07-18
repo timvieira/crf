@@ -7,8 +7,6 @@ import cPickle as pickle
 from collections import defaultdict
 from numpy import empty, zeros, ones, log, exp, sqrt, add, int32
 
-from iterextras import iterview
-
 
 def logsumexp(a):
     """
@@ -174,14 +172,14 @@ class CRF(object):
         """
         pass
 
-    def sgd(self, data, iterations=20, validate=None):
+    def sgd(self, data, iterations=20, a0=10, validate=None):
         """ Parameter estimation with stochastic gradient descent (sgd). """
         self.preprocess(data)
         W = self.W
         for i in xrange(iterations):
             print 'Iteration', i
-            rate = 10.0 / (sqrt(i) + 1)
-            for x in iterview(data):
+            rate = a0 / (sqrt(i) + 1)
+            for x in data:
                 for k, v in self.expectation(x).iteritems():
                     W[k] -= rate*v
                 for k in x.target_features:
@@ -195,10 +193,12 @@ class CRF(object):
         W = self.W
         for i in xrange(iterations):
             print 'Iteration', i
-            for x in iterview(data):
+            for x in data:
                 for k in self.path_features(x, self.argmax(x)):
                     W[k] -= rate
                 for k in x.target_features:
                     W[k] += rate
             if validate:
                 validate(self, i)
+
+

@@ -1,8 +1,6 @@
 from numpy import fromiter, int32
 
-from iterextras import partition
 from alphabet import Alphabet
-
 from crf import CRF
 
 
