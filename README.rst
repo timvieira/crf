@@ -3,7 +3,7 @@ Conditional Random Fields (CRF)
 
 SETUP
 =====
-You will need to grab my python-extras repository and stick it on your
+You will need to grab my `arsenal` repository and stick it on your
 python path.
 
 Example data for citation segmentation is included as well as very simple
