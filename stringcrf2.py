@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import fromiter, int32
-from iterextras import iterview
-from alphabet import Alphabet
+from arsenal.alphabet import Alphabet
 from crf import CRF
 
 from stringcrf import Instance

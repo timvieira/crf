@@ -1,6 +1,6 @@
 from numpy import fromiter, int32
 
-from alphabet import Alphabet
+from arsenal.alphabet import Alphabet
 from crf import CRF
 
 

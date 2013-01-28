@@ -1,8 +1,8 @@
-
 import re
-from nlp.evaluation import F1
-from nlp.annotation import fromSGML, extract_contiguous
-from iterextras import partition, iterview
+import numpy as np
+from arsenal.nlp.evaluation import F1
+from arsenal.nlp.annotation import fromSGML, extract_contiguous
+from arsenal.iterextras import partition, iterview
 
 #from stringcrf import Instance, StringCRF, build_domain
 from stringcrf2 import Instance, StringCRF, build_domain
@@ -68,9 +68,16 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
             print
             return f1.scores(verbose=True)
 
+        def weight_sparsity(W, t=0.0001):
+            a = (np.abs(W) > t).sum()
+            b = W.size
+            print '%.2f (%s/%s) sparsity' % (a*100.0/b, a, b)
+
         f1(train, name='TRAIN')
         f1(test, name='TEST')
 
+        print
+        weight_sparsity(model.W)
         print
         print 'likelihood:', sum(map(crf.likelihood, iterview(train))) / len(train)
         print
@@ -89,7 +96,7 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
 
     crf = StringCRF(L, A)
 
-    fit = [crf.sgd, crf.perceptron][1]
+    fit = [crf.sgd, crf.perceptron][0]
     fit(train, iterations=iterations, validate=validate)
 
     if save:
@@ -111,11 +118,6 @@ if __name__ == '__main__':
     def run():
         main(proportion=[0.7, 0.3])
 
-    def profile():
-        from profiling.utils import profile_viz
-        profile_viz('main(proportion=[0.1, 0.1], iterations=2, save=False)')
-
-    from automain import automain
-    automain(available=[quicky, run, profile, load, quicky2],
+    from arsenal.automain import automain
+    automain(available=[quicky, run, load, quicky2],
              ultraTB=True)
-    

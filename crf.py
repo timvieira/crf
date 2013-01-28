@@ -5,7 +5,7 @@ Conditional Random Fields (CRF)
 
 import cPickle as pickle
 from collections import defaultdict
-from numpy import empty, zeros, ones, log, exp, sqrt, add, int32
+from numpy import empty, zeros, ones, log, exp, sqrt, add, int32, abs
 
 
 def logsumexp(a):
@@ -201,4 +201,29 @@ class CRF(object):
             if validate:
                 validate(self, i)
 
+#    def sgd_l1(self, data, iterations=20, lmd=0.01, eta=0.5, validate=None):
+#        """ SGD + FOBOS L1 """
+#        self.preprocess(data)
+#        W = self.W
+#        for i in xrange(iterations):
+#            print 'Iteration', i
+#            lmd_eta = lmd * eta
+#            for x in data:
+#
+#                for k, v in self.expectation(x).iteritems():
+#                    W[k] -= eta*v
+#                for k in x.target_features:
+#                    W[k] += eta
+#                
+#                self.W = (self.W > lmd_eta) * (self.W - lmd_eta) + (self.W < -lmd_eta) * (self.W + lmd_eta)
+#
+#            if validate:
+#                validate(self, i)
+#
+#            eta *= 0.95
 
+#    def bfgs(self):
+#        from scipy import optimize
+#        likelihood = lambda x:-self.likelihood(fvs, x)
+#        likelihood_deriv = lambda x:-self.gradient_likelihood(fvs, x)
+#        return optimize.fmin_bfgs(likelihood, theta, fprime=likelihood_deriv)
