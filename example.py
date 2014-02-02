@@ -105,19 +105,20 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
 
 if __name__ == '__main__':
 
-    def quicky(iterations=5):
-        main(proportion=[0.2, 0.1], iterations=int(iterations), save=False)
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('action', choices=('quicky', 'quicky2','run','load'))
+    parser.add_argument('iterations', type=int)
+    args = parser.parse_args()
 
-    def quicky2(iterations=5):
-        """ Like quicky except it will save the model. """
-        main(proportion=[0.2, 0.1], iterations=int(iterations))
+    if args.action == 'quicky':
+        main(proportion=[0.2, 0.1], iterations=args.iterations, save=False)
 
-    def load(load='model.pkl~'):
-        main(proportion=[0.7, 0.3], load=load)
+    elif args.action == 'quicky2':
+        main(proportion=[0.2, 0.1], iterations=args.iterations)
 
-    def run():
-        main(proportion=[0.7, 0.3])
+    elif args.action == 'load':
+        main(proportion=[0.7, 0.3], load='model.pkl~')
 
-    from arsenal.automain import automain
-    automain(available=[quicky, run, load, quicky2],
-             ultraTB=True)
+    elif args.action == 'run':
+        main(proportion=[0.7, 0.3], iterations=args.interations)
