@@ -20,4 +20,4 @@ TODO
 Third Party Copyright
 =====================
 
-tagged_references.txt is from (Andrew MacCallum)[https://people.cs.umass.edu/%7Emccallum/data.html] 
+tagged_references.txt is from `Andrew MacCallum <https://people.cs.umass.edu/%7Emccallum/data.html>`_.
