@@ -73,13 +73,20 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
             b = W.size
             print '%.2f (%s/%s) sparsity' % (a*100.0/b, a, b)
 
-        f1(train, name='TRAIN')
-        f1(test, name='TEST')
+#        f1(train, name='TRAIN')
+#        if test:
+#            f1(test, name='TEST')
+
+#        print
+#        weight_sparsity(model.W)
+        llh = sum(map(crf.likelihood, iterview(train, msg='llh'))) / len(train)
+
+        from arsenal.viz.util import lineplot
+        with lineplot('llh') as d:
+            d.append(llh)
 
         print
-        weight_sparsity(model.W)
-        print
-        print 'likelihood:', sum(map(crf.likelihood, iterview(train))) / len(train)
+        print 'likelihood:', llh
         print
         print
 
@@ -96,7 +103,14 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
 
     crf = StringCRF(L, A)
 
-    fit = [crf.sgd, crf.perceptron][0]
+    if 0:
+        print 'testing gradient....'
+        crf.preprocess(train)
+        crf.W[:] = np.random.uniform(-1,1,size=crf.W.shape)
+        crf.test_gradient(train[:10])
+        print 'testing....done'
+
+    fit = [crf.sgd, crf.perceptron, crf.very_sgd][2]
     fit(train, iterations=iterations, validate=validate)
 
     if save:
@@ -112,7 +126,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.action == 'quicky':
-        main(proportion=[0.2, 0.1], iterations=args.iterations, save=False)
+        main(proportion=[0.2, 0.0], iterations=args.iterations, save=False)
 
     elif args.action == 'quicky2':
         main(proportion=[0.2, 0.1], iterations=args.iterations)

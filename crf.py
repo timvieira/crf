@@ -3,9 +3,13 @@
 Conditional Random Fields (CRF)
 """
 
+import numpy as np
 import cPickle as pickle
 from collections import defaultdict
-from numpy import empty, zeros, ones, log, exp, sqrt, add, int32, abs
+from numpy import empty, zeros, ones, log, exp, sqrt, add, int32
+from numpy.random import uniform
+from arsenal.iterview import iterview
+from arsenal.math import exp_normalize
 
 
 def logsumexp(a):
@@ -14,6 +18,13 @@ def logsumexp(a):
     """
     b = a.max()
     return b + log((exp(a-b)).sum())
+
+
+def sample(x):
+    cdf = x.cumsum()
+    Z = cdf[-1]
+    u = uniform()
+    return cdf.searchsorted(u * Z)
 
 
 class CRF(object):
@@ -114,6 +125,26 @@ class CRF(object):
                 b[t,yp] = logsumexp(by + g[t,yp,:])
         return b
 
+    # TODO: untested
+    def backward_sample(self, g, V):
+        "stochastically follow backpointers"
+        (N,_) = V.shape
+        path = [sample(exp_normalize(V[N-1,:]))]
+        for t in reversed(xrange(N-1)):
+            y = path[-1]
+            p = exp_normalize(V[t,:] + g[t,:,y])
+            yp = sample(p)
+            path.append(yp)
+        path.reverse()  # reverse in-place
+        return path
+
+    # TODO: untested
+    def sample(self, x):
+        (g0, g) = self.log_potentials(x)
+        V = self.forward(g0, g, x.N, self.K)
+        while 1:
+            yield self.backward_sample(g, V)
+
     def expectation(self, x):
         """
         Expectation of the sufficient statistics given ``x`` and current
@@ -177,11 +208,75 @@ class CRF(object):
         self.preprocess(data)
         W = self.W
         for i in xrange(iterations):
-            print 'Iteration', i
             rate = a0 / (sqrt(i) + 1)
-            for x in data:
+            for x in iterview(data, msg='Iteration %s' % i):
                 for k, v in self.expectation(x).iteritems():
                     W[k] -= rate*v
+                for k in x.target_features:
+                    W[k] += rate
+            if validate:
+                validate(self, i)
+
+
+    def test_gradient(self, data, subsetsize=100):
+
+        def fd(x, i, eps=1e-5):
+            """Compute `i`th component of the finite-difference approximation to the
+            gradient of log-likelihood at current parameters on example `x`.
+
+            """
+
+            was = self.W[i]   # record value
+
+            self.W[i] = was+eps
+            b = self.likelihood(x)
+
+            self.W[i] = was-eps
+            a = self.likelihood(x)
+
+            self.W[i] = was   # restore original value
+
+            return (b - a) / 2 / eps
+
+        for x in iterview(data, msg='test grad'):
+
+            g = defaultdict(float)
+            for k, v in self.expectation(x).iteritems():
+                g[k] -= 1*v
+            for k in x.target_features:
+                g[k] += 1
+
+            # pick a subset of features to test
+            d = np.random.choice(g.keys(), subsetsize, replace=0)
+
+            f = {}
+            for i in iterview(d, msg='fd approx'):     # loop over active features
+                f[i] = fd(x, i)
+
+            from arsenal.math import compare
+            compare([f[k] for k in d],
+                    [g[k] for k in d], name='test gradient %s' % x, scatter=1, show_regression=1)
+            import pylab as pl
+            pl.show()
+
+    def very_sgd(self, data, iterations=20, a0=10, R=1, validate=None):
+        """Parameter estimation with stochastic gradient descent (sgd) where
+        expectations are estimated by sampling.
+
+        """
+        assert R > 0
+        self.preprocess(data)
+        W = self.W
+        for i in xrange(iterations):
+            rate = a0 / (sqrt(i) + 1)
+            for x in iterview(data, msg='Iteration %s' % i):
+                r = 0
+                for y in self.sample(x):
+                    r += 1
+                    for k in self.path_features(x, y):
+                        W[k] -= rate / R
+                    if r >= R:
+                        break
                 for k in x.target_features:
                     W[k] += rate
             if validate:
@@ -192,8 +287,7 @@ class CRF(object):
         self.preprocess(data)
         W = self.W
         for i in xrange(iterations):
-            print 'Iteration', i
-            for x in data:
+            for x in iterview(data, msg='Iteration %s' % i):
                 for k in self.path_features(x, self.argmax(x)):
                     W[k] -= rate
                 for k in x.target_features:
@@ -214,7 +308,7 @@ class CRF(object):
 #                    W[k] -= eta*v
 #                for k in x.target_features:
 #                    W[k] += eta
-#                
+#
 #                self.W = (self.W > lmd_eta) * (self.W - lmd_eta) + (self.W < -lmd_eta) * (self.W + lmd_eta)
 #
 #            if validate:
