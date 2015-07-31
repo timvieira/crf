@@ -50,7 +50,7 @@ def run(proportion=None, iterations=20, save='model.pkl~', load=None):
             yield Instance(x, truth=y)
 
 
-    [train, test] = partition(get_data('tagged_references.txt'), proportion)
+    [train, test] = partition(get_data('data/tagged_references.txt'), proportion)
 
 
     def validate(model, iteration=None):
