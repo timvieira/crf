@@ -217,7 +217,6 @@ class CRF(object):
             if validate:
                 validate(self, i)
 
-
     def test_gradient(self, data, subsetsize=100):
 
         def fd(x, i, eps=1e-5):

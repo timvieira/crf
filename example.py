@@ -1,14 +1,16 @@
+"""
+Example usage of CRF module.
+"""
 import re
 import numpy as np
 from arsenal.nlp.evaluation import F1
 from arsenal.nlp.annotation import fromSGML, extract_contiguous
 from arsenal.iterextras import partition, iterview
-
-#from stringcrf import Instance, StringCRF, build_domain
+from arsenal.viz.util import lineplot
 from stringcrf2 import Instance, StringCRF, build_domain
 
 
-def main(proportion=None, iterations=20, save='model.pkl~', load=None):
+def run(proportion=None, iterations=20, save='model.pkl~', load=None):
 
     class Token(object):
         def __init__(self, form):
@@ -68,26 +70,13 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
             print
             return f1.scores(verbose=True)
 
-        def weight_sparsity(W, t=0.0001):
-            a = (np.abs(W) > t).sum()
-            b = W.size
-            print '%.2f (%s/%s) sparsity' % (a*100.0/b, a, b)
-
-#        f1(train, name='TRAIN')
-#        if test:
-#            f1(test, name='TEST')
-
-#        print
-#        weight_sparsity(model.W)
         llh = sum(map(crf.likelihood, iterview(train, msg='llh'))) / len(train)
 
-        from arsenal.viz.util import lineplot
         with lineplot('llh') as d:
             d.append(llh)
 
         print
         print 'likelihood:', llh
-        print
         print
 
     if load:
@@ -104,35 +93,32 @@ def main(proportion=None, iterations=20, save='model.pkl~', load=None):
     crf = StringCRF(L, A)
 
     if 0:
-        print 'testing gradient....'
+        print 'testing gradient likelihood....'
         crf.preprocess(train)
         crf.W[:] = np.random.uniform(-1,1,size=crf.W.shape)
         crf.test_gradient(train[:10])
         print 'testing....done'
 
-    fit = [crf.sgd, crf.perceptron, crf.very_sgd][2]
+    fit = [crf.sgd, crf.perceptron, crf.very_sgd][0]
     fit(train, iterations=iterations, validate=validate)
 
     if save:
         crf.save(save)
 
 
-if __name__ == '__main__':
-
+def main():
     from argparse import ArgumentParser
-    parser = ArgumentParser()
-    parser.add_argument('action', choices=('quicky', 'quicky2','run','load'))
-    parser.add_argument('iterations', type=int)
-    args = parser.parse_args()
-
-    if args.action == 'quicky':
-        main(proportion=[0.2, 0.0], iterations=args.iterations, save=False)
-
-    elif args.action == 'quicky2':
-        main(proportion=[0.2, 0.1], iterations=args.iterations)
-
+    p = ArgumentParser()
+    p.add_argument('action', choices=('quick', 'run', 'load'))
+    p.add_argument('iterations', type=int)
+    args = p.parse_args()
+    if args.action == 'quick':
+        run(proportion=[0.1, 0.0], iterations=args.iterations, save=False)
     elif args.action == 'load':
-        main(proportion=[0.7, 0.3], load='model.pkl~')
+        run(proportion=[0.7, 0.3], load='model.pkl~')
+    else:
+        run(proportion=[0.7, 0.3], iterations=args.iterations)
 
-    elif args.action == 'run':
-        main(proportion=[0.7, 0.3], iterations=args.interations)
+
+if __name__ == '__main__':
+    main()
