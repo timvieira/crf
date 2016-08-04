@@ -3,6 +3,7 @@
 Conditional Random Fields (CRF)
 """
 
+from __future__ import division
 import numpy as np
 import cPickle as pickle
 from collections import defaultdict
@@ -62,13 +63,13 @@ class CRF(object):
         return (g0, g)
 
     def __call__(self, x):
-        """ Infer the most likely labeling of ``x``. """
+        "Infer the most-likely labeling of ``x``."
         self.preprocess([x])
         return self.argmax(x)
 
     def argmax(self, x):
         """
-        Find the most likely assignment to labels given parameters using the
+        Find the most-likely assignment to labels given parameters using the
         Viterbi algorithm.
         """
         N = x.N
@@ -127,7 +128,7 @@ class CRF(object):
 
     # TODO: untested
     def backward_sample(self, g, V):
-        "stochastically follow backpointers"
+        "Stochastically follow backpointers."
         (N,_) = V.shape
         path = [sample(exp_normalize(V[N-1,:]))]
         for t in reversed(xrange(N-1)):
@@ -140,6 +141,9 @@ class CRF(object):
 
     # TODO: untested
     def sample(self, x):
+        """
+        Sample ouputs from model using forward-filtering-backward-sampling (FFBS).
+        """
         (g0, g) = self.log_potentials(x)
         V = self.forward(g0, g, x.N, self.K)
         while 1:
@@ -166,7 +170,6 @@ class CRF(object):
         c = exp(g0 + b[0,:] - logZ).clip(0.0, 1.0)
         for y in xrange(K):
             p = c[y]
-            if p < 1e-40: continue   # skip really small updates.
             for k in f[0, None, y]:
                 E[k] += p
 
@@ -180,7 +183,6 @@ class CRF(object):
                     # a bit slower than the computation of vectorized quantity ``c``.
                     #p = exp(a[t-1,yp] + g[t-1,yp,y] + b[t,y] - logZ).clip(0.0, 1.0)
                     p = c[yp, y]
-                    if p < 1e-40: continue   # skip really small updates.
                     # expectation of this factor is p*f(t, yp, y)
                     for k in f[t, yp, y]:
                         E[k] += p

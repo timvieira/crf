@@ -55,8 +55,8 @@ class StringCRF(CRF):
         A = self.feature_alphabet
         L = self.label_alphabet
 
-        size = len(A) * len(L)
-        if self.W.shape[0] != len(A) * len(L):     # timv: do we need to allocate this again and in this ugly way?
+        size = (len(A) + len(L))*len(L)
+        if self.W.shape[0] != size:
             print 'reallocating weight vector.'
             self.W = np.zeros(size)
 

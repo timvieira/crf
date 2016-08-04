@@ -1,5 +1,25 @@
-"""
-Example usage of CRF module.
+"""Example usage of CRF module for citation segmentation. Note: This module is
+just a quick demo of how to use the CRF module, not a serious attempt at a
+state-of-the-art citation segmentation system. The data comes from Andrew
+McCallum's webpage as you can see the README.
+
+The goal of citation segmentation is very simple: Take a citation string, e.g.,
+
+  A. Cau, R. Kuiper, and W.-P. de Roever. Formalising Dijkstra's development
+  strategy within Stark's formalism. In C. B. Jones, R. C. Shaw, and T. Denvir,
+  editors, Proc. 5th. BCS-FACS Refinement Workshop, 1992.
+
+and segment it into labeled substrings corresponding to a handful of
+bibliographic fields (author, title, year, editor, pages, etc.), e.g.,
+
+  <author> A. Cau, R. Kuiper, and W.-P. de Roever. </author> <title> Formalising
+  Dijkstra's development strategy within Stark's formalism. </title> <editor> In
+  C. B. Jones, R. C. Shaw, and T. Denvir, editors, </editor> <booktitle>
+  Proc. 5th. BCS-FACS Refinement Workshop, </booktitle> <date> 1992. </date>
+
+We model this with a linear chain CRF by labeling each token as author, title,
+year, editor, etc.
+
 """
 import re
 import numpy as np
