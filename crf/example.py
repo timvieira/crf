@@ -26,7 +26,7 @@ import numpy as np
 from arsenal.nlp.evaluation import F1
 from arsenal.nlp.annotation import fromSGML, extract_contiguous
 from arsenal.iterextras import partition, iterview
-from crf.stringcrf2 import Instance, Token, StringCRF, build_domain
+from crf.stringcrf import Instance, Token, StringCRF, build_domain
 
 
 def f1(data, name, model):
@@ -140,8 +140,6 @@ def run_test():
     _,_,_,_,f = zip(*f1(train, 'train', crf))
     overall = 100 * np.mean(f)   # equally weighted average F1
     print(f'Overall F1 (train): {overall:.2f}')
-
-
 
 
 def main():
