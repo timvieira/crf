@@ -1,9 +1,8 @@
 import numpy as np
 from numpy import fromiter, int32
 from arsenal.alphabet import Alphabet
-from crf import CRF
+from crf.basecrf import CRF
 
-from stringcrf import Instance
 
 def build_domain(data):
     """
@@ -22,21 +21,35 @@ def build_domain(data):
     return (L, A)
 
 
+class Instance(object):
+
+    def __init__(self, s, truth=None):
+        self.sequence = list(s)
+        self.truth = truth
+        self.N = len(s)
+        # CRF will cache data here
+        self.feature_table = None
+        self.target_features = None
+
+
+class Token(object):
+    def __init__(self, form):
+        self.form = form
+        self.attributes = []
+    def add(self, features):
+        """ Add features to this Token. """
+        self.attributes.extend(features)
+
+
 class StringCRF(CRF):
     """
-    TODO: rewrite docstring
-
     Conditional Random Field (CRF) for linear-chain structured models with
     string-valued labels and features.
 
-    This implementation of StringCRF differs from stringcrf.StringCRF in
-    that it encodes features in a more memory efficient fashion; instead
-    of computing the feature_table for all (t,yp,p) pairs we take use the
-    following trick:
+    This implementation of StringCRF differs from encodes features in a
+    memory efficient fashion; instead of computing the feature_table for
+    all (t,yp,p) pairs we do an on-the-fly conjunction with the label.
 
-       feature_table[t,yp,y] => x[t].attributes + y*|A|
-
-    This is basically the math used to index a 2d array.
     """
 
     def __init__(self, label_alphabet, feature_alphabet):
@@ -57,7 +70,7 @@ class StringCRF(CRF):
 
         size = (len(A) + len(L))*len(L)
         if self.W.shape[0] != size:
-            print 'reallocating weight vector.'
+            print('reallocating weight vector.')
             self.W = np.zeros(size)
 
         for x in data:
@@ -75,10 +88,11 @@ class FeatureVectorSequence(object):
         self.A = len(A)
         self.L = len(L)
     def __getitem__(self, item):
+        # Conjunction with label happends on the fly in this version.
         (t,yp,y) = item
         token = self.sequence[t]
         if yp is not None:
-            # todo: this is not perfect because the integer for `yp` was not assignment by the alphabet
+            # This is basically the math used to index a 2d array.
             return np.append(token, yp) + y*self.A
         else:
             return token + y*self.A
