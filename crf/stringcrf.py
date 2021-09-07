@@ -1,7 +1,9 @@
+import os
 import numpy as np
 from numpy import fromiter, int32
-from arsenal.alphabet import Alphabet
+#from arsenal.alphabet import Alphabet
 from crf.basecrf import CRF
+from crf.alphabet import Alphabet
 
 
 def build_domain(data):
